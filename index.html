@@ -1,0 +1,234 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Circular Loader</title>
+        <meta name="description" content="HTML, CSS, JS circular progress bar loader example.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="css/normalize.css">
+        <style>
+            #loader {
+                font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+                position: relative;
+                font-size: 2.8em;
+                font-weight: 500;
+                color: #FFFFFF;
+                width: 150px;
+                height: 150px;
+                border-radius: 100%;
+                background: #A2D36E;
+                -webkit-box-sizing: border-box;
+                      box-sizing: border-box;
+            }
+
+            #loader .center {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                -webkit-transform: translate(-50%, -50%);
+                  -ms-transform: translate(-50%, -50%);
+                      transform: translate(-50%, -50%)
+            }
+
+            #loader .half-circle {
+                height: 100%;
+                width: 50%;
+                overflow: hidden
+            }
+
+            #loader .half-circle > .inner {
+                height: 100%;
+                width: 200%;
+                border-radius: 100% 0 0 100%
+            }
+
+            #loader .half-circle.right > .inner {
+                margin-left: -100%;
+                border-radius: 0 100% 100% 0
+            }
+
+            #loader > .padding {
+                width: 80%;
+                height: 80%
+            }
+
+            #loader > .padding > .progress {
+                position: absolute;
+                right: 0;
+                z-index: 1;
+                -webkit-transform-origin: center left;
+                  -ms-transform-origin: center left;
+                      transform-origin: center left
+            }
+
+            #loader > .padding > .progress > .inner {
+                background: #FFFFFF;
+            }
+
+            #loader > .padding > .right-half-mask {
+                position: absolute;
+                right: 0;
+                z-index: 2
+            }
+
+            #loader > .padding > .right-half-mask > .inner.shell {
+                height: 102%;
+                width: 202%;
+                background: #A2D36E
+            }
+
+            #loader > .padding > .left-half-progress {
+                display: none;
+                position: absolute;
+                z-index: 3
+            }
+
+            #loader > .padding > .left-half-progress > .inner {
+                background: #FFFFFF
+            }
+
+            #loader > .padding > .display {
+                position: absolute;
+                background: #A2D36E;
+                border-radius: 100%;
+                width: 92%;
+                height: 92%;
+                z-index: 4
+            }
+        </style>
+    </head>
+    <body>
+
+        <!--[if lte IE 9]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
+        <![endif]-->
+
+        <div id="loader">
+            <div class="padding center">
+                <div class="progress half-circle right">
+                    <div class="bar inner"></div>
+                </div>
+                <div class="right-half-mask half-circle right">
+                    <div class="inner shell"></div>
+                </div>
+                <div class="left-half-progress half-circle">
+                    <div class="bar inner"></div>
+                </div>
+                <div class="display center shell">
+                    <div class="inner center value">8.8</div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            'use strict'
+
+            // Loader
+            const loader = {
+
+                init (options) {
+
+                    if (!options || typeof options !== 'object') options = {}
+
+                    this.loader = document.getElementById('loader')
+                    this.padding = this.loader.querySelector(':scope > .padding')
+                    this.progress = this.padding.querySelector(':scope > .progress')
+                    this.rightMask = this.padding.querySelector(':scope > .right-half-mask')
+                    this.leftProgess = this.padding.querySelector(':scope > .left-half-progress')
+                    this.displayValue = this.padding.querySelector(':scope > .display > .value')
+
+                    this.setShellColor(options.shellColor)
+                    this.setBarColor(options.barColor)
+                    this.setFontSize(options.fontSize)
+                    this.setSize(options.size)
+                },
+                setFontSize (size) {
+
+                    if (typeof size !== 'string') return
+
+                    this.loader.style.fontSize = size
+                },
+                setSize (size) {
+
+                    if (typeof size !== 'string') return
+
+                    this.loader.style.width = this.loader.style.height = size
+                },
+                setShellColor (color) {
+
+                    if (typeof color !== 'string') return
+
+                    const shells = this.padding.querySelectorAll('.shell')
+                    shells.forEach(el => el.style.background = color)
+                    this.loader.style.background = color
+                },
+                setBarColor (color) {
+
+                    if (typeof color !== 'string') return
+
+                    const bars = this.padding.querySelectorAll('.bar')
+                    bars.forEach(el => el.style.background = color)
+                    this.loader.style.color = color
+                },
+                setProgress (update, value) {
+
+                    const degrees = Math.floor(update) * 3.6
+                    const rotate = 'rotate(-' + degrees + 'deg)'
+                    const targets = [
+                        'transform',
+                        'webkitTransform',
+                        'MozTransform',
+                        'msTransform',
+                        'OTransform'
+                    ]
+                    const target = targets.find(
+                        prop => this.progress.style[prop] !== undefined
+                    )
+                    this.progress.style[target] = rotate
+
+                    this.displayValue.textContent = value
+
+                    if (degrees > 180) {
+                        this.leftProgess.style.display = 'block'
+                        this.rightMask.style.display = 'none'
+                    }
+                }
+            }
+
+            // Usage
+            loader.init({
+                // shellColor: 'black', // Set custom color for the shell & display text
+                // barColor: 'blue', // Set custom color for the progress bar
+                // fontSize: '4em', // Set font size of text on display
+                // size: '250px' // Set size of the loader (width = height)
+            })
+
+            const resolveProgressValue = (value) => {
+
+                const fixed = value.toFixed(1)
+
+                if (parseFloat(fixed) < 10) return fixed
+
+                return '10'
+            }
+
+            const progress = (update, stop) => {
+
+                if (stop) return
+
+                const value = resolveProgressValue(update)
+                const state = parseFloat(value) * 10
+
+                // Set state of progress from 0 to 100.
+                // Set value of text in the display (e.g. 8.8)
+                loader.setProgress(state, value)
+                window.requestAnimationFrame(
+                    () => progress(update + 0.1, state === 100)
+                )
+            }
+
+            progress(0.0)
+        </script>
+    </body>
+</html>
